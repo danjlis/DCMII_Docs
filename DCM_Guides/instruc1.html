@@ -1,0 +1,127 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+</head>
+
+<body>
+
+<center>
+<p>
+<font size="8" color="red"> DCM Cheat Sheet</font>
+</p></center>
+
+<pre>
+/* J.Nagle - notes on DCM interface - updated 7/13/98           */
+
+/* you must define either PPC or 68K for the controller type    */
+/* you must define either PHONCS or NEVIS1 for file path names  */
+/* you must define JAMIE_LOCAL if not in larger ONCS environs   */
+
+/* these are now done as -D compilation flags                   */
+
+/*==============================================================*/
+/* BELOW VARIABLES ARE ONLY DEFINED IN LOCAL NEVIS ENVIRONS     */
+/* OTHERWISE THEY ARE ENUMERATED IN AN IDL FILE ---             */
+/*==============================================================*/
+
+#ifdef JAMIE_LOCAL
+
+  #define SUCCESS 0
+  #define FAILURE 9
+
+  #define RESET                  1
+  #define LOAD_DSP_PROGRAM       2
+  #define LOAD_FPGA              3
+  #define LOAD_LIST_MEMORY       4
+  #define GET_LIST_MEMORY        5
+  #define LOAD_PED_MEMORY        6
+  #define GET_PED_MEMORY         7
+  #define LOAD_THRESHOLD_MEMORY  8
+  #define GET_THRESHOLD_MEMORY   9
+  #define GLINK_ONLINE          10
+  #define LOAD_FAKE_DATA        11
+  #define GET_DATA_EVENT        12
+  #define GET_DCB_STATUS        13
+  #define GET_LINK_PORT_STATUS  14
+  #define GET_COMP_PORT_STATUS  15
+  #define GET_SINGLE_WORD       16
+  #define FLG_ONLINE            17
+  #define VERIFY_DCB            18
+  #define CLEAR_COMPRESSOR      19
+
+  #define ONCS_TEC  1 
+  #define ONCS_DC   2
+  #define ONCS_PC   3
+  #define ONCS_TOF  4
+  #define ONCS_EMC  5
+  #define ONCS_RICH 6
+  #define ONCS_BB   7
+  #define ONCS_MVD  8
+
+#endif
+
+==================================================================
+Let me define some ordering of which functions can be done when
+==================================================================
+
+There are two types of daughter cards:
+
+1)  fe1 = daughter card for Drift Chamber, Time-Expansion Chamber, and Pad Chamber, MuID
+	-In order to read fake or real data, no specific memories need to be loaded...
+        -In order to zero suppress data, you must load threshold memory only (no List/Ped)...  
+
+2)  fe2 = daughter card for TOF(AMU Cell based), EMCal, RICH, MVD, BB, MuTR
+	-In order to read fake data or real data out, you must load list memory...
+	-In order to zero suppress data, you must load list, pedestal and threshold memory also...
+
+You are not required to read any of the memories back, it is just for checking...
+You can download and upload any memories (List,Pedestal,Threshold) in any order and
+as many times as you want after the (1)(2)(3) sequence is done...
+
+Right now you have an fe1 card for Drift Chamber. 7/12/98
+
+function name        number    ordering                                    fe1 or fe2      status
+===================  ======    ==========================================  ============    ======
+RESET                  1       anytime                                        both         working
+LOAD_DSP_PROGRAM       2       only after (1)                                 both         working
+LOAD_FPGA              3       only after (1) and (2)                         both         working
+
+LOAD_LIST_MEMORY       4       only after (1), (2) and (3) loadfpga           fe2 only
+GET_LIST_MEMORY        5       only after (1), (2) and (3) loadfpga           fe2 only
+LOAD_PED_MEMORY        6       only after (1), (2) and (3) loadfpga           fe2 only
+GET_PED_MEMORY         7       only after (1), (2) and (3) loadfpga           fe2 only
+LOAD_THRESHOLD_MEMORY  8       only after (1), (2) and (3) loadfpga           both         working
+GET_THRESHOLD_MEMORY   9       only after (1), (2) and (3) loadfpga           both         working
+
+LOAD_FAKE_DATA        11       after (1), (2) and (3) loadfpga                both         works once - bug
+                                                                                           on 2nd try...
+                               after (1), (2) and (3) and (4) for fe2         both         working
+
+GET_DATA_EVENT        12       after (1), (2) and (3) loadfpga                both         working
+                               after (1), (2) and (3) and (4) for fe2         both         working
+
+GET_DCB_STATUS        13       anytime                                        both 	   working
+GET_LINK_PORT_STATUS  14       anytime                                        both         working
+GET_COMP_PORT_STATUS  15       anytime                                        both         working
+
+VERIFY_DCB            18       anytime                                        both         not sure...
+
+CLEAR_COMPRESSOR      19       anytime after (1), (2) and (3) loadfpga        both         working
+                               this flushes the memory buffer on daughter card...
+			       clears error condition of buffer over-write...
+
+GLINK_ONLINE          10       not used now - only for special testing
+GET_SINGLE_WORD       16       not used now - only for special testing
+FLG_ONLINE            17       not used now - only for special testing
+
+
+</pre>
+
+
+
+
+
+
+
+
+</body></html>

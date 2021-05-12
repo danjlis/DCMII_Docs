@@ -1,0 +1,93 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body bgcolor="#EAE0A8">
+<center>
+<p>
+<font size="8" color="red"> DCM Stand Alone User Guide</font>
+</p></center>
+
+<font bold="">
+<pre>
+Last Updated:  J.Nagle March 30, 2001
+
+These instructions are for running the DCM software in Stand Alone mode 
+(ie. without run control).  There are two steps.  
+
+--------------------------------------------------------------------------------
+
+First you can select options on the readout method before you start running.
+In the run control version this is done automatically.  For each granule
+there is a configuration file (eg. "muid.s.pcf" which is usually a soft link to
+the real file "muid.s.pcf.BASE") which is located at:
+
+    /export/software/oncs/online_configuration/rc/hw
+
+You can select certain readout options at this point.  You need to run a 
+processing script from this directory as shown in the following examples.
+
+    process_pcf_file -DZERO -DPAR_TCPIP muid.s.pcf
+
+This creates the appropriate temporary muid.s granule *.dat files that exist
+in the directory "/export/software/oncs/online_configuration/Dcm".  These files
+are constantly overwritten by this script, so do not edit these files.  In the
+above example I have selected to run with zero suppression and sending the data
+to the partition module which then sends it to the crate controller and over
+tcpip to a file.  If nothing was selected then you get a set of defaults.  The
+following are the set of options (not available to all granules).
+
+1.  zero suppression (either ZERO or NOZERO)
+2.  data transfer method (either DSP14_TCPIP or DSP5_TCPIP or PAR_TCPIP or PAR_JSEB)
+      - the last option is only when using the event builder
+      - the first three options write to a file if the event builder is not used
+3.  data format (either SHORT or LONG)
+      - presently this is for the EMCal only
+      - only the SHORT format can have the ZERO suppression working
+
+If you do not have a pcf file for your granule, please let me know. 
+
+Lastly, if you want to turn particular channels off and on, presently you need to
+edit the pcf file.  Basically for each fiber connection there is a "readout:YES" 
+or "readout:NO".  John Haggerty is working on a perl/tk gui to allow users to do 
+this without hand editing the files.  
+
+--------------------------------------------------------------------------------
+
+Second, you can run the granule.  You need to do your usual ARCNET loads and GTM
+setup.  Then for the DCM portion:
+
+1.  Login to the phoncs account on phoncs0.phenix.bnl.gov
+2.  Type "setuponcs R3.0.0"  
+3.  dcm MUID.S
+
+         - just type your granule name
+	 - here is a list of names:  GL1 BB ZDC MVD DC.W DC.E PC.W PC.E RICH.W RICH.E
+                                     TEC.E TOF.E EMC.W.T EMC.W.B EMC.E.T EMC.E.B
+                                     MUTR.S MUID.S
+         - this should automatically pick up your correct temporary *.dat files
+	      (again if it does not work let me know)
+
+4.  type 0   (for interaction session)
+5.  type 301 (load the files)
+6.  type 303 (load the DCM boards)
+7.  type 305 (to take data)
+        
+         - input the number of events desired
+	 - input where to put the events (disk needs to be mounted eg. 
+           "/export/bigdisk/phoncs")
+
+8.  type 306 (stop run)
+
+         - right now stop run often does not work properly.  We are working
+	   on it.  If you want to start another run, just type 303 again
+	   to reboot the DCM boards and then 305.
+				     
+
+</pre>
+
+
+
+
+
+
+</font></body></html>

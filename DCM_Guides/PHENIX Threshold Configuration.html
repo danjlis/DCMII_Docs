@@ -1,0 +1,95 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>PHENIX Threshold Configuration</title>
+</head>
+
+<body bgcolor="lightyellow">
+<center>
+<font size="7" color="red">PHENIX Threshold Configuration</font>
+</center>
+<hr>
+
+<font size="5" color="navy"><u>Directory Structure</u></font>
+<p>
+The threshold files are kept in <font color="blue">$DCM_THRESHOLDS</font>,
+and they are organized into subdirectories by granule name.  Below is a
+directory listing of these subdirectories as of 18 June, 2001.
+</p>
+
+<pre><font color="red">
+phoncs0:thresholds&gt; ls
+bb/       emc.e.t/  emc.w.t/  rich.e/   tec.e/    zdc/
+emc.e.b/  emc.w.b/  mutr.s/   rich.w/   tof.e/
+</font>
+</pre>
+
+<font size="5" color="navy"><u>Naming Convention</u></font>
+<p>
+The threshold files are kept under these subdirectories.  They are named
+according to packet id, with the name
+</p>
+
+<pre><font color="red">
+	$DCM_THRESHOLDS/&lt;granuleName&gt;/&lt;detname&gt;&lt;packetid&gt;.thresh
+        e.g.,
+	$DCM_THRESHOLDS/zdc/zdc13001.thresh
+</font>
+</pre>
+
+<p>
+Actually, the threshold files are set in the pcf configuration file.
+The <font color="blue">threshold1</font> field contains the threshold filename
+for the first packet in a multiplex, and the <font color="blue">threshold2</font>
+field contains the filename for the second packet.  A name of "tnull" indicates
+no file has been set.  As you can see, we have
+conveniently chosen a directory structure and file names that will help to keep
+things organized, <font color="red">so DON'T change the threshold filename
+in the pcf files</font>.  You should instead replace the files in the threshold directory
+when you need a new set of thresholds.
+</p>
+
+<font size="5" color="navy"><u>Threshold File Format</u></font>
+<p>
+There is one threshold file per packet.  The files are plain ascii files,
+with one threshold value per line.  The ordering of the channels is the same
+as that given in the <a href="https://phenix-intra.sdcc.bnl.gov/phenix/project_info/electronics/dcm/DCM_formats/PHENIX_Formats/">DCM documentation
+for the data formats</a>.  There should be as many lines in the file as there are
+channels in one packet of data.  In the <a href="https://phenix-intra.sdcc.bnl.gov/phenix/project_info/electronics/dcm/DCM_formats/PHENIX_Formats/">
+DCM format documentation</a> there is also a list of the hit formats which support
+zero-suppression and details on the suppression algorithm, which you will need to
+read in order to understand what the threshold settings should be.
+</p>
+
+<p>
+An example file for the ZDC is given <a href="https://phenix-intra.sdcc.bnl.gov/phenix/project_info/electronics/dcm/zdc_thresholds.html">here</a>.
+There are only 8 values for the 8 channels of the ZDC.  The threshold on the
+first line, 3910, gets applied to the first zdc channel, the threshold on the
+second line gets applied to the second channel, etc.  Simple, isn't it?  When
+the DCMs are booted they get loaded into memory in the DCMs, and are
+applied as the data comes in.
+</p>
+
+<font size="5" color="navy"><u>Procedure for data taking</u></font>
+<p>
+It is the responsibility of the subsystems to make sure that the threshold files
+are in place before a zero-suppressed run begins.  This of course includes detailed
+study with beam conditions.  When a run is started, all the threshold values
+will be recorded into the online database.  Martin Purschke and Sergei Belikov have
+a nice set of code to do this.  These values can then be retrieved later for any
+given run (more details are forthcoming on this).
+</p>
+
+<font size="5" color="navy"><u>Some Utilities</u></font>
+<p>
+Here are some useful utilities for dealing with the threshold configurations:
+<br><br>
+1. dcmthresholds.sh: This utility sets the thresholds to one flat value for all the channels in one granule.
+</p><pre><font size="2" color="red">
+          makethresholds.sh &lt;granule_name&gt; &lt;threshold_value&gt;
+</font></pre>
+<p></p>
+
+
+
+
+</body></html>

@@ -1,0 +1,177 @@
+DCM List Memory Information & How To 
+--------------------------------------------------
+The objective of this document is to outline the procedure used to create 
+the list memory file used by the DCM's for the 15 sample mutr readout studies.
+
+
+1) The list memory file is used by the DCM to rearrange the stream of data sent 
+   by the FEE's into an order that is recognized by the data unpacker. To do this 
+   it is first necessary to understand the output of the FEE's.  For the 15 sample
+   mutr readout the format of the data sent from the FEE's is given below. It can be
+   seen that the data is arranged according to sample number.
+
+   Data Format from MUTR FEE for 15 samples:   
+
+    Num	   Name
+    ====   ========================
+    0      start marker
+    1      detector id      
+    2      event number
+    3      module address
+    4      flag word
+    5      beam clock counter
+    6      amu cell 0
+    7      amu cell 1
+    8      amu cell 2
+    9      amu cell 3
+    10     channel 0 - sample 0
+    11     channel 1 - sample 0
+    12     channel 2 - sample 0
+    ..
+    ..
+    138    channel 0 - sample 1
+    139    channel 1 - sample 1
+    ..
+    ..
+    1929   channel 126 - sample 14
+    1930   channel 127 - sample 14  
+    1931   user word 0
+    1932   user word 1
+    1933   user word 2
+    1934   user word 3
+    1935   user word 4
+    1936   user word 5
+    1937   user word 6
+    1938   user word 7
+    1939   longitudinal parity word
+    1940   summary word
+
+
+2) In the DCM the data is reordered according to channel number. The list memory file contains the 
+   address mapping that governs the reordering of the data.  To create a new list memory file 
+   online_distribution/Dcm/utilities/create_list_mem.cc must be edited.  Here are some instructions:
+   a) g++ create_list_mem_test2.cc   //to compile changes
+   b) root
+   c) .L create_list_mem_test2.cc
+   d) main()
+      outfilename.dat
+      select desired subdetector 
+      .q
+   e) hexdump outfilename.dat   //to check new list memory file
+  
+   **The code has been modified such that it will query the computer it is being run on to find out
+     if it is a Big Endian or Little Endian machine.  If the machine is Little Endian the order will 
+     automatically be reversed such that the outfilename.dat is written in the required Big Endian 
+     format.  If you have modified the code or added new options it is critical that you BE CAREFUL 
+     to maintain this functionality!  If in doubt contact Abby (bickleya@colorado.edu).  
+
+3) To add a new subdetector or hit format to create_list_mem.cc simply create a new option and add it
+   to the file list at the beginning of the code (lines 43-66) and add the appropriate mapping within
+   the option.  Take for example option 23, (MUTR with reordering, 15 sample readout).  The data words
+   are rearranged from the mutr FEE format shown above to the hit format shown below.  The 9 header 
+   words are written first and then the code steps through each channel (total=128) to select and write
+   the samples in the predetermined order (chanX:sample2,0,4,5,6,7,8,9,10,11,12,13,14,1,3).  Finally, 
+   the 9 trailer words are written.  In the code you'll notice that the process is followed twice.  
+   The upper 16-bit label is added so that the unpacker can recognize and select the corrent word.  The
+   upper 16-bit labels are shown below.  The hex string represents (Chan#,SampleLabel) where the sample
+   labels are (b,9,9,9,9,9,9,9,9,9,9,9,9,a,c) for samples (2,0,4,5,6,7,8,9,10,11,12,13,14,1,3), respectively.
+   The FEE label is just the position in the FEE datastream where the word appears.  
+
+   FEE Label for each header word: Num from MUTR FEE data format above
+   FEE Label for each chan&sample: (10+sample*128+chan)
+   FEE Label for each trailer word: (MUTR_LENGTH_15 - 10 + i)
+			
+   Hit Format after reordering in the DCM for MUTR 15 sample readout:				  
+    Num   Name                            Upper 16-bits   FEE Label
+    ====  =============================   =============   =========
+    0     flag word			  0x000f	  0x0004
+    1     module address                  0x000e	  0x0003
+    2     event number                    0x0006	  0x0002
+    3     beam clock counter              0x0006	  0x0005
+    4     detector id                     0x0006	  0x0001
+    5     amu cell 0                      0x0001	  0x0006
+    6     amu cell 1                      0x0002	  0x0007
+    7     amu cell 2                      0x0003	  0x0008
+    8     amu cell 3                      0x0004	  0x0009
+    9     (chan 0 - samp 2)		  0x000b	  0x010a
+    10    (chan 0 - samp 0)		  0x0009	  0x000a
+    11    (chan 0 - samp 4)		  0x0009	  0x020a
+    12    (chan 0 - samp 5)		  0x0009	  0x028a
+    13    (chan 0 - samp 6)		  0x0009	  0x030a
+    14    (chan 0 - samp 7)		  0x0009	  0x038a
+    15    (chan 0 - samp 8)		  0x0009	  0x040a
+    16    (chan 0 - samp 9)		  0x0009	  0x048a
+    17    (chan 0 - samp 10)		  0x0009	  0x050a
+    18    (chan 0 - samp 11)		  0x0009	  0x058a
+    19    (chan 0 - samp 12)		  0x0009	  0x060a
+    20    (chan 0 - samp 13)		  0x0009	  0x068a
+    21    (chan 0 - samp 14)		  0x0009	  0x070a
+    22    (chan 0 - samp 1)		  0x000a	  0x008a
+    23    (chan 0 - samp 3)		  0x000c	  0x018a
+    24    (chan 1 - samp 2)		  0x001b	  0x010b
+    25    (chan 1 - samp 0)		  0x0019	  0x000b
+    26    (chan 1 - samp 4)		  0x0019	  0x020b
+    27    (chan 1 - samp 5)		  0x0019	  0x028b
+    28    (chan 1 - samp 6)		  0x0019	  0x030b
+    29    (chan 1 - samp 7)		  0x0019	  0x038b
+    ..
+    ..
+    1915  (chan 127 - samp 2)		  0x07fb	  0x0189
+    1916  (chan 127 - samp 0)		  0x07f9	  0x0089
+    1917  (chan 127 - samp 4)		  0x07f9	  0x0289
+    1918  (chan 127 - samp 5)		  0x07f9	  0x0309
+    1919  (chan 127 - samp 6)		  0x07f9	  0x0389
+    1920  (chan 127 - samp 7)		  0x07f9	  0x0409
+    1921  (chan 127 - samp 8)		  0x07f9	  0x0489
+    1922  (chan 127 - samp 9)		  0x07f9	  0x0509
+    1923  (chan 127 - samp 10)		  0x07f9	  0x0589
+    1924  (chan 127 - samp 11)		  0x07f9	  0x0609
+    1925  (chan 127 - samp 12)		  0x07f9	  0x0689
+    1926  (chan 127 - samp 13)		  0x07f9	  0x0709
+    1927  (chan 127 - samp 14)		  0x07f9	  0x0789
+    1928  (chan 127 - samp 1)		  0x07fa	  0x0109
+    1929  (chan 127 - samp 3)		  0x07fc	  0x0209
+    1930  user word 0                     0x0808	  0x078a
+    1931  user word 1                     0x0808	  0x078b
+    1932  user word 2                     0x0808	  0x078c
+    1933  user word 3                     0x0808	  0x078d
+    1934  user word 4                     0x0808	  0x078e
+    1935  user word 5                     0x0808	  0x078f
+    1936  user word 6                     0x0808	  0x0791
+    1937  user word 7                     0x0808	  0x0792
+    1938  longitudinal parity word        0x0808	  0x0793
+    1939  summary word                    0xbfff
+
+
+4) To implement the newly created list memeory file it is necesssary to transfer the file to 
+   phnxrc@phoncsc, $DCM_DATA and to modify the appropriate pcf file to use the new list memory.
+   For the 15 sample test bench studies is was necessary to create a new pcf file 
+   $RC_HW_CONF/mutr.tb.pcf.15sample that calls $DCM_DATA/mutr_list_15sample_reorder.dat
+
+5) In addition, it is also necessary to create a new official hit format and data unpacker.  
+   These fall under the purview of Martin.  He will need to assign the hit format #, which then 
+   must be implemented in the pcf file.  The unpacker is developed to recognize the hit format in 
+   the data stream.  To develop the unpacker Martin will need the upper 16-bit labels and data 
+   ordering as shown directly above.  
+
+
+================================================================================================
+Documentation of EMC grey format: (Chun)
+
+There are 3 options about the EMC grey format.
+Option1: tansfers short long grey to DCM 1008. DCM1008 is 24 channels and 5 words per channel. 
+Short long grey is 24 channels and 5 words per channel. The mapping between grey format and regular 
+format is coded by arry "order".
+
+Option2: transfers long long grey format to DCM1008. Long long grey format is 32 channels and 5 words 
+per channel.  Again maping between grey to regular is coded by arry "order".
+
+Option3: tansfers short long grey format to DCM1008 without re-ordering.
+
+
+These are the three options we have now. But Mickey just pointed to me, we should have a long long grey 
+to DCM808, which is 32 channels and 5 words per channel.
+
+
+
+**Last Updated: 12:00 February 23, 2006 (AAB) 

@@ -1,0 +1,93 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+</head>
+
+<body>
+
+<center>
+<p>
+<font size="8" color="red"> PHENIX Superfake Instructions</font>
+</p></center>
+
+<pre>J.Nagle - updated 08/04/2004
+
+The goal of superfake running is to generate fake data in the DCM dsp's as controlled via 
+Run Control and then have the data go through the Event Builder and logged to disk.  This
+allows DAQ system tests without running FEM's and allows one to control data size, fluctuations
+and loading.
+
+To run superfake, follow the below instructions.
+
+1.  You need to decide which granules you want to run in superfake mode.  
+
+2.  There is a level-1 trigger configuration called superfake1.  You need to modify
+this or create a new one (using the standard level-1 gui interface) so that Partition #2 
+includes all the granules you want to run in superfake mode.  Make sure to use Partition #2.
+
+3.  You need to modify the online_configuration/rc/hw/superfake.pcf file.  In that ascii file
+at the top there are a set of #defines which are commented out.  Just put back in the lines
+
+#define SUPERFAKE
+#define SUPERFAKE_GL1
+
+and the appropriate lines for the granules you want to run.  
+
+NOTE THAT WHEN YOU ARE FINISHED RUNNING SUPERFAKE, YOU !!! MUST !!! COMMENT THESE LINES BACK
+OUT.  Otherwise the next person to try to run that subsystem with real data will get very confused.
+
+In the near-future this problem will be removed, because you will be able to select within runcontrol
+superfake and it will process the pcf files with -D SUPERFAKE.
+
+4.  One other edit to superfake.pcf is needed.  Go to the line "#define DCM_GL1_SOURCE_ID".  You need
+to figure out which granule numbers you are running (they are in the level-1 configuration gui).  
+Then you need to calculate the granule accept vector.
+
+granule_accept_vector = 0;
+Loop over all granules [
+   granule_accept_vector = granule_accept_vector | (1 &lt;&lt; gran_number)
+]
+
+Type this value into superfake.pcf as the DCM_GL1_SOURCE_ID (yes, it is overloaded too).
+
+5.  Then you load the real GL1.  This is necessary even though we are not using the real GL1 data.
+
+6.  Then load the Event Builder - it should then know about the correct partition #2 and granules.
+
+7.  Launch the GL1 run control.  Download, but do not start running.
+
+8.  Launch the partition #2 run control.  Download.
+
+9.  Then you start running the partition #2 run control.  You should see that all the SEB's will fill
+up with events.
+
+10. Then start the GL1 run control immediately afterwards.  Then it will start assembling events.
+
+--&gt; Warnings !
+
+a.  We found a problem around event 65k.  Presumably a counter roll-over issue.  This needs to be resolved.
+
+b.  There may be timing issues with the EvB that have not been explored in this mode.  John Haggerty and
+I ran GL1, ZDC, MUTR.N and it was fine up to 65k.
+
+--&gt; Features !
+
+a.  In the superfake.pcf file each granule gets an overloaded hit format.  They are all 50000 + N.  This
+generates a fake data packet of size N (not including the packet header).  If you want to change the event
+size for a granule, just change this value in the superfake.pcf file.
+
+b.  In the future we can add features to have the event size fluctuate independently, or have all systems
+fluctuation together (simulating centrality).  Please let me (Jamie) know if you want
+specific features.  We should make sure what we have works before doing too much more.  
+
+
+</pre>
+
+
+
+
+
+
+
+
+</body></html>

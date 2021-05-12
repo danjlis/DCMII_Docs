@@ -1,0 +1,122 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>DAQ Monitor Guide</title>
+</head>
+
+<body bgcolor="lightyellow">
+<center>
+<font size="7" color="red">DAQ Monitor Guide</font>
+</center>
+<p>
+This routine runs in the pmon framework and checks for basic
+integrity of events run in standalone mode or built through the
+event builder. 
+</p><p>
+</p><h2>How to Run?</h2>
+<p>
+Login to one of the valinux cluster machines (ssh vaxx) under the
+phoncs account.  
+</p><pre>
+&gt; setuponcs
+&gt; cd ~/monitor/online/monitoring/phnxmonitor/daq
+&gt; root
+&gt; root [0] gSystem-&gt;Load("libDaqMon.so");
+&gt; root [1] pfileopen("/common/buffer2/eventdata/EVENTDATAxxx_P05-0000022824-0000.PRDFF");
+           // to read from a file
+           OR
+	   petopen("/tmp/Monitor@etpool");
+	   // to read from the ET event pool
+&gt; root [2] prun(10)
+           // to read through N events (in this example N=10)
+	   OR
+	   pstart()
+	   // to continuously read events
+&gt; root [3] .x DaqMonStatus.C
+           // this shows a gui update of the monitor status
+	   OR
+	   .L DaqMonStatusCont.C
+	   loopMonitor();
+	   // this give a period automatic update of the gui monitor status
+
+</pre>
+<p>
+Also, the more detailed text information on specific errors is constantly
+being written to an output file called "DaqMon.out" that is presently written
+to the "pwd" directory.  You can run in another window "tail -f DaqMon.out" 
+to see any error messages.
+</p><p>
+If you want to make a private version to play with you can do the following:
+</p><pre>
+&gt; cvs checkout online/monitoring/phnxmonitor/daq
+&gt; make
+
+</pre>
+You can select any PRDF file you want and however many events you want
+to check.  You can also select a pool.  You will see lots of 
+printed messages that report details on 
+errors found (mostly for DAQ and subsystems during debugging).  Then when
+you execute the granstatus.C macro it will plot a global summary of error
+conditions.  
+<p>
+The following is the list of checks that are currently done.  The gui display 
+is shown below.  The granules are listed vertically and error conditions
+horizontally.
+<font color="red"><bold>
+</bold></font></p><pre><font color="red">
+o Exist      :  Is this granule there in the file?
+o Comp       :  Are all packets expected from the detector present?
+o Parity     :  Is the FEM parity word in agreement with a re-check?
+o ClkSame    :  Are all FEM clock counters the same in each event?
+o ClkDiff    :  Are all FEM clocks changing by the same increment between events?
+o Gl1Clk     :  Are all FEM clocks changing by the same increment as the Gl1 Clock?
+o EvtSeq     :  Are the FEM event counters in agreement with GL1 granule counter?
+o PktHdr     :  Is the packet header length out of bounds (&gt;2000 for now)?
+o DCMChk     :  The DCM's add a longitudinal XOR checksum word in the DEBUG block.
+                This is then recalculated and any error must be from a bit error
+		out of the DCM dsp, through the backplane readout or on the cable
+		into the JSEB receiver.
+o DCMSum     :  The DCM summary word is not currently being checked.
+
+</font></pre><font color="red">
+</font>
+<pre>A <font color="green"><bold>GREEN</bold></font> circle means that everything is good.
+A <font color="red"><bold>RED</bold></font> circle means that there is at least one error.  
+A <font color="black"><bold>GREEN</bold></font> circle means that no check was done.
+
+A few comments are worth adding here.  
+1) In the case of Exist, a black circle means that the granule was not present.  
+2) The parity check can only be done on data with no zero supression, except
+   if the supression only removed all zero words (eg. DC, PC, MUID).
+3) Some granules never have the same FEM clocks between FEMS, but they do increment
+   the same between events.  In these cases we do not bother to check the ClkSame
+   and the circle is black.
+4) The DCM Summary error bit check is not implemented in this version.
+5) If all granules have a GL1ClkDiff error, then usually the data is completely
+   corrupted and the run should be stopped.  
+
+The second display shows for each granule, the number of errors for each packet.
+Plotted on the x-axis is the packet_id offset value.  The colors indicate
+the number of total errors, up to seven types per packet per event.  
+
+In the example below, you can see that the errors from panel one observed in 
+MUTR granule and from just two packets.  However, the errors from the MVD are
+in a large number of packets.  In order to debug problems in more detail one
+needs to look out the text debug output (DaqMon.out in the same directory). 
+
+The colors represent percentage ranges.  In the left plot it is the percentage of 
+packets in that granule that have errors.  In the right plot it is the percentage 
+of events that a given packets has errors in.
+</pre>
+
+<img src="DAQ%20Monitor%20Guide_files/daqmonitor1_v2.gif" width="50%" align="LEFT">
+<img src="DAQ%20Monitor%20Guide_files/daqmonitor2_v2.gif" width="50%" align="RIGHT">
+
+
+
+
+
+
+
+
+
+</body></html>
